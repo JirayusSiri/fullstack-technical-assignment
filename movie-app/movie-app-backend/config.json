@@ -1,0 +1,77 @@
+{
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "postgres",
+        "password": "password",
+        "database": "movies_app"
+    },
+    "movies": [
+        {
+            "title": "Inception"
+        },
+        {
+            "title": "The Shawshank Redemption"
+        },
+        {
+            "title": "The Godfather"
+        },
+        {
+            "title": "Pulp Fiction"
+        },
+        {
+            "title": "The Dark Knight"
+        },
+        {
+            "title": "Schindler's List"
+        },
+        {
+            "title": "Forrest Gump"
+        },
+        {
+            "title": "The Matrix"
+        },
+        {
+            "title": "Interstellar"
+        },
+        {
+            "title": "Fight Club"
+        }
+    ],
+    "categories": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Drama",
+        "Horror",
+        "Science Fiction",
+        "Thriller",
+        "Romance",
+        "Fantasy",
+        "Documentary"
+    ],
+    "tags": [
+        "Action-packed",
+        "Funny",
+        "Heartwarming",
+        "Scary",
+        "Romantic",
+        "Futuristic",
+        "Suspenseful",
+        "Magical",
+        "Exciting",
+        "Animated"
+    ],
+    "genres": [
+        "Action",
+        "Drama",
+        "Comedy",
+        "Thriller",
+        "Science Fiction",
+        "Horror",
+        "Romance",
+        "Adventure",
+        "Fantasy",
+        "Animation"
+    ]
+}

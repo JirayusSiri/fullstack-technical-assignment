@@ -1,21 +1,17 @@
 const { Client } = require('pg');
+const fs = require('fs');
 const { generateMovie, generateUser, generateWebsiteTheme, generateGenre, generateTag, generateCategory, generateMetadata } = require('./faker')
 
-
-// const client = new Client({
-//     user: 'your_username',
-//     host: 'your_host',
-//     database: 'your_database',
-//     password: 'your_password',
-//     port: 'your_port',
-// });
+const configPath = './config.json';
+const configData = fs.readFileSync(configPath, 'utf-8');
+const config = JSON.parse(configData);
 
 const client = new Client({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'movies_app',
-    password: 'password',
-    port: '5432',
+    user: config.database.user,
+    host: config.database.host,
+    database: config.database.database,
+    password: config.database.password,
+    port: config.database.port,
 });
 
 async function connectToDatabase() {
@@ -45,7 +41,7 @@ async function createTables() {
             email TEXT UNIQUE NOT NULL,
             password TEXT,
             phone_number TEXT,
-            website_theme INTEGER REFERENCES website_themes(id)
+            website_theme INTEGER REFERENCES website_themes(id) NOT NULL
           );
         `);
 
@@ -162,20 +158,20 @@ async function truncateTables() {
         await client.query('TRUNCATE TABLE user_favorite_movies RESTART IDENTITY CASCADE');
         await client.query('TRUNCATE TABLE user_favorite_categories RESTART IDENTITY CASCADE');
     } catch (err) {
-        await client.query('ROLLBACK'); // Rollback the transaction if an error occurs
+        // await client.query('ROLLBACK'); // Rollback the transaction if an error occurs
         console.error('Error trucate tables:', err);
     }
 }
 
 // Function to insert fake data into the database
-async function insertData(numMovies, numUsers, numThemes, numGenre, numTag, numCategory) {
+async function insertData(numUsers, numThemes) {
     try {
         truncateTables();
 
-        for (let i = 0; i < numMovies; i++) {
-            const movie = generateMovie();
+        for (const movie of config.movies) {
+            const generatedMovie = generateMovie();
             const query = 'INSERT INTO movies (title, description, length, date_released, date_available_until) VALUES ($1, $2, $3, $4, $5)';
-            const values = [movie.title, movie.description, movie.length, movie.dateReleased, movie.dateAvailableUntil];
+            const values = [movie.title, generatedMovie.description, generatedMovie.length, generatedMovie.dateReleased, generatedMovie.dateAvailableUntil];
             await client.query(query, values);
         }
 
@@ -193,24 +189,21 @@ async function insertData(numMovies, numUsers, numThemes, numGenre, numTag, numC
             await client.query(query, values);
         }
 
-        for (let i = 0; i < numGenre; i++) {
-            const genre = generateGenre();
+        for (const genre of config.genres) {
             const query = 'INSERT INTO genres (name) VALUES ($1)';
-            const values = [genre.name];
+            const values = [genre.toLowerCase()];
             await client.query(query, values);
         }
 
-        for (let i = 0; i < numTag; i++) {
-            const tag = generateTag();
-            const query = 'INSERT INTO tags (name) VALUES ($1)';
-            const values = [tag.name];
-            await client.query(query, values);
-        }
-
-        for (let i = 0; i < numCategory; i++) {
-            const category = generateCategory();
+        for (const category of config.categories) {
             const query = 'INSERT INTO categories (name) VALUES ($1)';
-            const values = [category.name];
+            const values = [category.toLowerCase()];
+            await client.query(query, values);
+        }
+
+        for (const tag of config.tags) {
+            const query = 'INSERT INTO tags (name) VALUES ($1)';
+            const values = [tag.toLowerCase()];
             await client.query(query, values);
         }
 
@@ -226,19 +219,20 @@ async function insertData(numMovies, numUsers, numThemes, numGenre, numTag, numC
         await insertUserFavoriteCategories(userIds, categoryIds);
         await insertMetadata(movieIds);
 
-        console.log(`${numMovies} movies inserted successfully!`);
+        console.log(`${config.movies.length} movies inserted successfully!`);
         console.log(`${numUsers} users inserted successfully!`);
-        console.log(`${numGenre} genres inserted successfully!`);
-        console.log(`${numTag} tags inserted successfully!`);
-        console.log(`${numCategory} categories inserted successfully!`);
+        console.log(`${numThemes} users inserted successfully!`);
+        console.log(`${config.genres.length} genres inserted successfully!`);
+        console.log(`${config.tags.length} tags inserted successfully!`);
+        console.log(`${config.categories.length} categories inserted successfully!`);
         console.log(`${movieIds.length} movie genres inserted successfully!`);
         console.log(`${movieIds.length} movie tags inserted successfully!`);
         console.log(`${movieIds.length} movie categories inserted successfully!`);
         console.log(`${userIds.length} user favorite movies inserted successfully!`);
         console.log(`${userIds.length} user favorite categories inserted successfully!`);
         console.log(`${movieIds.length} metadata inserted successfully!`);
+
     } catch (err) {
-        await client.query('ROLLBACK'); // Rollback the transaction if an error occurs
         console.error('Error inserting data:', err);
     }
 }

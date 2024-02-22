@@ -1,11 +1,11 @@
-const faker = require('faker');
+const { faker } = require('@faker-js/faker');
 
 // Function to generate fake movie data
 function generateMovie() {
     return {
-        title: faker.lorem.words(),
-        description: faker.lorem.paragraph(),
-        length: faker.datatype.number({ min: 60, max: 180 }),
+        title: faker.lorem.words({min:1, max:5}),
+        description: faker.lorem.words(10),
+        length: faker.number.int({ min: 60, max: 180 }),
         dateReleased: faker.date.past(),
         dateAvailableUntil: faker.date.future(),
     };
@@ -17,7 +17,8 @@ function generateUser() {
         username: faker.internet.userName(),
         email: faker.internet.email(),
         password: faker.internet.password(),
-        phoneNumber: faker.phone.phoneNumber(),
+        phoneNumber: faker.string.numeric(10)
+        // phoneNumber: faker.phone.number()
     };
 }
 
@@ -52,9 +53,9 @@ function generateCategory() {
 // Function to generate metadata data
 function generateMetadata() {
     return {
-        picture_url: Array.from({ length: faker.datatype.number({ min: 1, max: 3 }) }, () => faker.internet.url()),
-        metadata_title: faker.lorem.words(),
-        metadata_description: faker.lorem.words()
+        picture_url: Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => faker.internet.url()),
+        metadata_title: faker.lorem.words({min:1, max:5}),
+        metadata_description: faker.lorem.words(10)
     };
 }
 
