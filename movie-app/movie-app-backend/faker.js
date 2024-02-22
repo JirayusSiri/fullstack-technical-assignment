@@ -49,4 +49,13 @@ function generateCategory() {
     };
 }
 
-module.exports = { generateMovie, generateUser, generateWebsiteTheme, generateGenre, generateTag, generateCategory };
+// Function to generate metadata data
+function generateMetadata() {
+    return {
+        picture_url: Array.from({ length: faker.datatype.number({ min: 1, max: 3 }) }, () => faker.internet.url()),
+        metadata_title: faker.lorem.words(),
+        metadata_description: faker.lorem.words()
+    };
+}
+
+module.exports = { generateMovie, generateUser, generateWebsiteTheme, generateGenre, generateTag, generateCategory, generateMetadata };
