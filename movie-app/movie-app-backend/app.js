@@ -108,7 +108,7 @@ app.get('/', (req, res) => {
         </head>
         <body>
           <h1>Welcome to my movie app APIs!</h1>
-          <p>This is a simple movie app APIs.</p>
+          <p>This is simple movie app APIs.</p>
           <p><a href="/api/movies">View Movies</a></p>
           <p><a href="/api/users">View Users</a></p>
         </body>

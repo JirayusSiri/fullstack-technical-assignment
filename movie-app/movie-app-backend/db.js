@@ -1,17 +1,18 @@
 const { Client } = require('pg');
 const fs = require('fs');
 const { generateMovie, generateUser, generateWebsiteTheme, generateGenre, generateTag, generateCategory, generateMetadata } = require('./faker')
+require('dotenv').config();
 
 const configPath = './config.json';
 const configData = fs.readFileSync(configPath, 'utf-8');
 const config = JSON.parse(configData);
 
 const client = new Client({
-    user: config.database.user,
-    host: config.database.host,
-    database: config.database.database,
-    password: config.database.password,
-    port: config.database.port,
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_DATABASE,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT
 });
 
 async function connectToDatabase() {
