@@ -1,9 +1,10 @@
-const { client, connectToDatabase, createTables, insertData } = require('./db');
+const { client, connectToDatabase, createTables, insertData, dropTables } = require('./db');
 const express = require('express');
 const app = express();
 
 async function startApp() {
     await connectToDatabase(); // Connect to the database
+    await dropTables(); // Drop all tables if exist
     await createTables(); // Create tables into database
     await insertData(3, 3); // Insert data into the database
     // await client.end(); // Close the database connection
@@ -13,10 +14,10 @@ async function startApp() {
 app.get('/api/movies', async (req, res) => {
     try {
         const result = await client.query('SELECT * FROM movies');
-        const movies = result.rows.map(row => row.title);
-        res.json({ movies });
+        // const movies = result.rows.map(row => row.title);
+        res.json(result.rows);
     } catch (error) {
-        console.error('Error querying database', error);
+        console.error('Error fetching movies', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -35,7 +36,7 @@ app.get('/api/movies/category/:categoryName', async (req, res) => {
         `, [categoryName]);
 
         const movies = result.rows.map(row => row.title);
-        res.json({ movies, categoryName });
+        res.json({ movies, "category": categoryName });
     } catch (error) {
         console.error('Error fetching movies by category', error);
         res.status(500).json({ error: error });
@@ -56,7 +57,41 @@ app.get('/api/movies/tag/:tagName', async (req, res) => {
         `, [tagName]);
 
         const movies = result.rows.map(row => row.title);
-        res.json({ movies, tagName });
+        res.json({ movies, "tag": tagName });
+    } catch (error) {
+        console.error('Error fetching movies by tag', error);
+        res.status(500).json({ error: error });
+    }
+});
+
+// API endpoint to get all users
+app.get('/api/users', async (req, res) => {
+    try {
+        const result = await client.query('SELECT username, email, phone_number FROM users');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error querying database', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// API endpoint to get one user's details with movies
+app.get('/api/users/:userId', async (req, res) => {
+    const userId = req.params.userId;
+
+    try {
+        const result = await client.query(`
+            SELECT users.id, users.username, users.email, users.phone_number, 
+            (SELECT name FROM website_themes WHERE id = users.website_theme_id) AS website_theme, 
+            array_agg(movies.title) AS favorite_movies
+            FROM users
+            LEFT JOIN user_favorite_movies ON users.id = user_favorite_movies.user_id
+            LEFT JOIN movies ON user_favorite_movies.movie_id = movies.id
+            WHERE users.id = $1
+            GROUP BY users.id;
+        `, [userId]);
+
+        res.json(result.rows);
     } catch (error) {
         console.error('Error fetching movies by category', error);
         res.status(500).json({ error: error });
@@ -74,7 +109,8 @@ app.get('/', (req, res) => {
         <body>
           <h1>Welcome to my movie app APIs!</h1>
           <p>This is a simple movie app APIs.</p>
-          <p><a href="/movies">View Movies</a></p>
+          <p><a href="/api/movies">View Movies</a></p>
+          <p><a href="/api/users">View Users</a></p>
         </body>
       </html>
     `);

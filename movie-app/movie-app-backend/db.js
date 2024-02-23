@@ -41,7 +41,7 @@ async function createTables() {
             email TEXT UNIQUE NOT NULL,
             password TEXT,
             phone_number TEXT,
-            website_theme INTEGER REFERENCES website_themes(id) NOT NULL
+            website_theme_id INTEGER REFERENCES website_themes(id)
           );
         `);
 
@@ -138,8 +138,8 @@ async function createTables() {
         `);
 
         console.log('Tables created successfully!');
-    } catch (err) {
-        console.error('Error creating tables:', err);
+    } catch (error) {
+        console.error('Error creating tables:', error);
     }
 }
 
@@ -157,16 +157,34 @@ async function truncateTables() {
         await client.query('TRUNCATE TABLE movie_categories RESTART IDENTITY CASCADE');
         await client.query('TRUNCATE TABLE user_favorite_movies RESTART IDENTITY CASCADE');
         await client.query('TRUNCATE TABLE user_favorite_categories RESTART IDENTITY CASCADE');
-    } catch (err) {
-        // await client.query('ROLLBACK'); // Rollback the transaction if an error occurs
-        console.error('Error trucate tables:', err);
+    } catch (error) {
+        console.error('Error truncate tables:', error);
+    }
+}
+
+async function dropTables() {
+    try {
+        await client.query('DROP TABLE IF EXISTS user_favorite_movies');
+        await client.query('DROP TABLE IF EXISTS user_favorite_categories');
+        await client.query('DROP TABLE IF EXISTS users');
+        await client.query('DROP TABLE IF EXISTS website_themes');
+        await client.query('DROP TABLE IF EXISTS movie_genres');
+        await client.query('DROP TABLE IF EXISTS movie_tags');
+        await client.query('DROP TABLE IF EXISTS movie_categories');
+        await client.query('DROP TABLE IF EXISTS metadatas');
+        await client.query('DROP TABLE IF EXISTS movies');
+        await client.query('DROP TABLE IF EXISTS genres');
+        await client.query('DROP TABLE IF EXISTS tags');
+        await client.query('DROP TABLE IF EXISTS categories');
+    } catch (error) {
+        console.error('Error dropping table:', error);
     }
 }
 
 // Function to insert fake data into the database
 async function insertData(numUsers, numThemes) {
     try {
-        truncateTables();
+        // truncateTables();
 
         for (const movie of config.movies) {
             const generatedMovie = generateMovie();
@@ -212,12 +230,14 @@ async function insertData(numUsers, numThemes) {
         const genreIds = await getGenreIds();
         const tagIds = await getTagIds();
         const categoryIds = await getCategoryIds();
+
         await insertMovieGenres(movieIds, genreIds);
         await insertMovieTags(movieIds, tagIds);
         await insertMovieCategories(movieIds, categoryIds);
         await insertUserFavoriteMovie(userIds, movieIds);
         await insertUserFavoriteCategories(userIds, categoryIds);
         await insertMetadata(movieIds);
+        await insertUserWebsiteTheme(userIds);
 
         console.log(`${config.movies.length} movies inserted successfully!`);
         console.log(`${numUsers} users inserted successfully!`);
@@ -232,8 +252,8 @@ async function insertData(numUsers, numThemes) {
         console.log(`${userIds.length} user favorite categories inserted successfully!`);
         console.log(`${movieIds.length} metadata inserted successfully!`);
 
-    } catch (err) {
-        console.error('Error inserting data:', err);
+    } catch (error) {
+        console.error('Error inserting data:', error);
     }
 }
 
@@ -242,8 +262,8 @@ async function getMovieIds() {
     try {
         const result = await client.query('SELECT id FROM movies');
         return result.rows.map(row => row.id);
-    } catch (err) {
-        console.error('Error query movies:', err);
+    } catch (error) {
+        console.error('Error query movies:', error);
     }
 }
 
@@ -252,8 +272,8 @@ async function getUserIds() {
     try {
         const result = await client.query('SELECT id FROM users');
         return result.rows.map(row => row.id);
-    } catch (err) {
-        console.error('Error query users:', err);
+    } catch (error) {
+        console.error('Error query users:', error);
     }
 }
 
@@ -262,8 +282,8 @@ async function getGenreIds() {
     try {
         const result = await client.query('SELECT id FROM genres');
         return result.rows.map(row => row.id);
-    } catch (err) {
-        console.error('Error query genres:', err);
+    } catch (error) {
+        console.error('Error query genres:', error);
     }
 }
 
@@ -272,8 +292,8 @@ async function getTagIds() {
     try {
         const result = await client.query('SELECT id FROM tags');
         return result.rows.map(row => row.id);
-    } catch (err) {
-        console.error('Error query tags:', err);
+    } catch (error) {
+        console.error('Error query tags:', error);
     }
 }
 
@@ -282,8 +302,18 @@ async function getCategoryIds() {
     try {
         const result = await client.query('SELECT id FROM categories');
         return result.rows.map(row => row.id);
-    } catch (err) {
-        console.error('Error query categories:', err);
+    } catch (error) {
+        console.error('Error query categories:', error);
+    }
+}
+
+// Function to query website theme IDs from the website_themes table
+async function getWebsiteThemeIds() {
+    try {
+        const result = await client.query('SELECT id FROM website_themes');
+        return result.rows.map(row => row.id);
+    } catch (error) {
+        console.error('Error query categories:', error);
     }
 }
 
@@ -300,8 +330,8 @@ async function insertMovieGenres(movieIds, genreIds) {
                 await client.query('INSERT INTO movie_genres (movie_id, genre_id) VALUES ($1, $2)', [movieId, genreId]);
             }
         }
-    } catch (err) {
-        console.error('Error inserting movie-genre combinations:', err);
+    } catch (error) {
+        console.error('Error inserting movie-genre combinations:', error);
     }
 }
 
@@ -318,8 +348,8 @@ async function insertMovieTags(movieIds, tagIds) {
                 await client.query('INSERT INTO movie_tags (movie_id, tag_id) VALUES ($1, $2)', [movieId, tagId]);
             }
         }
-    } catch (err) {
-        console.error('Error inserting movie-tag combinations:', err);
+    } catch (error) {
+        console.error('Error inserting movie-tag combinations:', error);
     }
 }
 
@@ -336,8 +366,8 @@ async function insertMovieCategories(movieIds, categoryIds) {
                 await client.query('INSERT INTO movie_categories (movie_id, category_id) VALUES ($1, $2)', [movieId, categoryId]);
             }
         }
-    } catch (err) {
-        console.error('Error inserting movie-category combinations:', err);
+    } catch (error) {
+        console.error('Error inserting movie-category combinations:', error);
     }
 }
 
@@ -354,8 +384,8 @@ async function insertUserFavoriteMovie(userIds, movieIds) {
                 await client.query('INSERT INTO user_favorite_movies (user_id, movie_id) VALUES ($1, $2)', [userId, movieId]);
             }
         }
-    } catch (err) {
-        console.error('Error inserting user-movie combinations:', err);
+    } catch (error) {
+        console.error('Error inserting user-movie combinations:', error);
     }
 }
 
@@ -372,8 +402,8 @@ async function insertUserFavoriteCategories(userIds, categoryIds) {
                 await client.query('INSERT INTO user_favorite_categories (user_id, category_id) VALUES ($1, $2)', [userId, categoryId]);
             }
         }
-    } catch (err) {
-        console.error('Error inserting user-category combinations:', err);
+    } catch (error) {
+        console.error('Error inserting user-category combinations:', error);
     }
 }
 
@@ -386,9 +416,22 @@ async function insertMetadata(movieIds) {
             const values = [metadata.picture_url, metadata.metadata_title, metadata.metadata_description, movieId];
             await client.query(query, values);
         }
-    } catch (err) {
-        console.error('Error inserting metadata:', err);
+    } catch (error) {
+        console.error('Error inserting metadata:', error);
     }
 }
 
-module.exports = { client, connectToDatabase, createTables, insertData };
+// Function to insert website theme for a each user
+async function insertUserWebsiteTheme(userIds) {
+    try {
+        const websiteThemeIds = await getWebsiteThemeIds();
+        for (const userId of userIds) {
+            const randomThemeId = websiteThemeIds[Math.floor(Math.random() * websiteThemeIds.length)];
+            await client.query('UPDATE users SET website_theme_id = $1 WHERE id = $2', [randomThemeId, userId]);
+        }
+    } catch (error) {
+        console.error('Error inserting user website theme:', error);
+    }
+}
+
+module.exports = { client, connectToDatabase, createTables, insertData, dropTables };
